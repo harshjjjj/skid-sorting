@@ -6,6 +6,7 @@ import Layout from './components/layout/Layout';
 import InputPage from './pages/InputPage';
 import VisualizationPage from './pages/VisualizationPage';
 import LoadingResultsPage from './pages/LoadingResultsPage';
+import PlacedSkidPage from './pages/PlacedSkidPage';
 
 // Check if WebGL is available
 const isWebGLAvailable = (): boolean => {
@@ -53,6 +54,8 @@ const AppContent: React.FC = () => {
     switch (activeTab) {
       case 'input':
         return <InputPage />;
+      case 'placedSkid':
+        return <PlacedSkidPage />;
       case 'visualization':
         // If WebGL is not supported, show the 2D results page instead
         return webGLSupported === false ? <LoadingResultsPage /> : <VisualizationPage />;

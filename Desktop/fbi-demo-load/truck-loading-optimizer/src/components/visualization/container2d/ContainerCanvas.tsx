@@ -15,6 +15,7 @@ interface ContainerCanvasProps {
   highlightedSkidId?: string | null;
   zoomLevel?: number;
   onSkidClick?: (skid: Skid) => void;
+  useMetric?: boolean; // Added prop to toggle between metric and imperial
 }
 
 const ContainerCanvas: React.FC<ContainerCanvasProps> = ({
@@ -25,7 +26,8 @@ const ContainerCanvas: React.FC<ContainerCanvasProps> = ({
   showLabels = true,
   highlightedSkidId = null,
   zoomLevel = 1,
-  onSkidClick
+  onSkidClick,
+  useMetric = false // Default to imperial (feet)
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredSkid, setHoveredSkid] = useState<Skid | null>(null);
@@ -35,7 +37,7 @@ const ContainerCanvas: React.FC<ContainerCanvasProps> = ({
   const CANVAS_PADDING = 50; // Increased padding for rulers
   const LABEL_FONT_SIZE = 12;
   const SEQUENCE_FONT_SIZE = 14;
-  const GRID_MAJOR_INTERVAL = 5; // 5-foot intervals for major grid lines
+  const GRID_MAJOR_INTERVAL = useMetric ? 1 : 5; // 5-foot or 1-meter intervals for major grid lines
   
   // Convert truck dimensions from meters to feet for display
   const truckLengthMeters = truckDimensions.insideLength || truckDimensions.length * 0.95;
@@ -148,52 +150,89 @@ const ContainerCanvas: React.FC<ContainerCanvasProps> = ({
     const scaleX = (canvas.width - CANVAS_PADDING * 2) / truckLengthMeters;
     const scaleY = (canvas.height - CANVAS_PADDING * 2) / truckWidthMeters;
     
-    // Calculate foot grid spacing in pixels
-    const footSizeX = scaleX * FEET_TO_METERS;
-    const footSizeY = scaleY * FEET_TO_METERS;
-    
     // Draw grid if enabled
     if (showGrid) {
-      // Draw 1-foot grid
       ctx.strokeStyle = '#e5e5e5'; // Light gray for minor grid
       ctx.lineWidth = 0.5;
       
-      // Vertical grid lines (every foot)
-      for (let ft = 0; ft <= Math.ceil(truckLengthFeet); ft++) {
-        const x = CANVAS_PADDING + (ft * FEET_TO_METERS * scaleX);
-        
-        // Use darker lines for 5-foot intervals
-        if (ft % GRID_MAJOR_INTERVAL === 0) {
-          ctx.strokeStyle = '#aaaaaa'; // Darker gray for major grid
-          ctx.lineWidth = 0.8;
-        } else {
-          ctx.strokeStyle = '#e5e5e5'; // Light gray for minor grid
-          ctx.lineWidth = 0.5;
+      if (useMetric) {
+        // Draw 1-meter grid for metric
+        // Vertical grid lines (every meter)
+        for (let m = 0; m <= Math.ceil(truckLengthMeters); m++) {
+          const x = CANVAS_PADDING + (m * scaleX);
+          
+          // Use darker lines for major intervals
+          if (m % GRID_MAJOR_INTERVAL === 0) {
+            ctx.strokeStyle = '#aaaaaa'; // Darker gray for major grid
+            ctx.lineWidth = 0.8;
+          } else {
+            ctx.strokeStyle = '#e5e5e5'; // Light gray for minor grid
+            ctx.lineWidth = 0.5;
+          }
+          
+          ctx.beginPath();
+          ctx.moveTo(x, CANVAS_PADDING);
+          ctx.lineTo(x, CANVAS_PADDING + truckWidthMeters * scaleY);
+          ctx.stroke();
         }
         
-        ctx.beginPath();
-        ctx.moveTo(x, CANVAS_PADDING);
-        ctx.lineTo(x, CANVAS_PADDING + truckWidthMeters * scaleY);
-        ctx.stroke();
-      }
-      
-      // Horizontal grid lines (every foot)
-      for (let ft = 0; ft <= Math.ceil(truckWidthFeet); ft++) {
-        const y = CANVAS_PADDING + (ft * FEET_TO_METERS * scaleY);
-        
-        // Use darker lines for 5-foot intervals
-        if (ft % GRID_MAJOR_INTERVAL === 0) {
-          ctx.strokeStyle = '#aaaaaa'; // Darker gray for major grid
-          ctx.lineWidth = 0.8;
-        } else {
-          ctx.strokeStyle = '#e5e5e5'; // Light gray for minor grid
-          ctx.lineWidth = 0.5;
+        // Horizontal grid lines (every meter)
+        for (let m = 0; m <= Math.ceil(truckWidthMeters); m++) {
+          const y = CANVAS_PADDING + (m * scaleY);
+          
+          // Use darker lines for major intervals
+          if (m % GRID_MAJOR_INTERVAL === 0) {
+            ctx.strokeStyle = '#aaaaaa'; // Darker gray for major grid
+            ctx.lineWidth = 0.8;
+          } else {
+            ctx.strokeStyle = '#e5e5e5'; // Light gray for minor grid
+            ctx.lineWidth = 0.5;
+          }
+          
+          ctx.beginPath();
+          ctx.moveTo(CANVAS_PADDING, y);
+          ctx.lineTo(CANVAS_PADDING + truckLengthMeters * scaleX, y);
+          ctx.stroke();
+        }
+      } else {
+        // Draw 1-foot grid for imperial
+        // Vertical grid lines (every foot)
+        for (let ft = 0; ft <= Math.ceil(truckLengthFeet); ft++) {
+          const x = CANVAS_PADDING + (ft * FEET_TO_METERS * scaleX);
+          
+          // Use darker lines for 5-foot intervals
+          if (ft % GRID_MAJOR_INTERVAL === 0) {
+            ctx.strokeStyle = '#aaaaaa'; // Darker gray for major grid
+            ctx.lineWidth = 0.8;
+          } else {
+            ctx.strokeStyle = '#e5e5e5'; // Light gray for minor grid
+            ctx.lineWidth = 0.5;
+          }
+          
+          ctx.beginPath();
+          ctx.moveTo(x, CANVAS_PADDING);
+          ctx.lineTo(x, CANVAS_PADDING + truckWidthMeters * scaleY);
+          ctx.stroke();
         }
         
-        ctx.beginPath();
-        ctx.moveTo(CANVAS_PADDING, y);
-        ctx.lineTo(CANVAS_PADDING + truckLengthMeters * scaleX, y);
-        ctx.stroke();
+        // Horizontal grid lines (every foot)
+        for (let ft = 0; ft <= Math.ceil(truckWidthFeet); ft++) {
+          const y = CANVAS_PADDING + (ft * FEET_TO_METERS * scaleY);
+          
+          // Use darker lines for 5-foot intervals
+          if (ft % GRID_MAJOR_INTERVAL === 0) {
+            ctx.strokeStyle = '#aaaaaa'; // Darker gray for major grid
+            ctx.lineWidth = 0.8;
+          } else {
+            ctx.strokeStyle = '#e5e5e5'; // Light gray for minor grid
+            ctx.lineWidth = 0.5;
+          }
+          
+          ctx.beginPath();
+          ctx.moveTo(CANVAS_PADDING, y);
+          ctx.lineTo(CANVAS_PADDING + truckLengthMeters * scaleX, y);
+          ctx.stroke();
+        }
       }
     }
     
@@ -213,53 +252,103 @@ const ContainerCanvas: React.FC<ContainerCanvasProps> = ({
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Draw horizontal ruler (length)
-    for (let ft = 0; ft <= Math.ceil(truckLengthFeet); ft += GRID_MAJOR_INTERVAL) {
-      const x = CANVAS_PADDING + (ft * FEET_TO_METERS * scaleX);
+    if (useMetric) {
+      // Draw horizontal ruler (length) in meters
+      for (let m = 0; m <= Math.ceil(truckLengthMeters); m += GRID_MAJOR_INTERVAL) {
+        const x = CANVAS_PADDING + (m * scaleX);
+        
+        // Draw tick
+        ctx.beginPath();
+        ctx.moveTo(x, CANVAS_PADDING - 5);
+        ctx.lineTo(x, CANVAS_PADDING);
+        ctx.stroke();
+        
+        // Draw meter marker
+        ctx.fillText(`${m}m`, x, CANVAS_PADDING - 15);
+      }
       
-      // Draw tick
-      ctx.beginPath();
-      ctx.moveTo(x, CANVAS_PADDING - 5);
-      ctx.lineTo(x, CANVAS_PADDING);
-      ctx.stroke();
+      // Draw vertical ruler (width) in meters
+      for (let m = 0; m <= Math.ceil(truckWidthMeters); m += GRID_MAJOR_INTERVAL) {
+        const y = CANVAS_PADDING + (m * scaleY);
+        
+        // Draw tick
+        ctx.beginPath();
+        ctx.moveTo(CANVAS_PADDING - 5, y);
+        ctx.lineTo(CANVAS_PADDING, y);
+        ctx.stroke();
+        
+        // Draw meter marker
+        ctx.textAlign = 'right';
+        ctx.fillText(`${m}m`, CANVAS_PADDING - 10, y);
+      }
       
-      // Draw foot marker
-      ctx.fillText(`${ft}'`, x, CANVAS_PADDING - 15);
-    }
-    
-    // Draw vertical ruler (width)
-    for (let ft = 0; ft <= Math.ceil(truckWidthFeet); ft += GRID_MAJOR_INTERVAL) {
-      const y = CANVAS_PADDING + (ft * FEET_TO_METERS * scaleY);
+      // Add container label in meters
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(
+        `Container: ${truckLengthMeters.toFixed(1)}m × ${truckWidthMeters.toFixed(1)}m`,
+        CANVAS_PADDING,
+        10
+      );
       
-      // Draw tick
-      ctx.beginPath();
-      ctx.moveTo(CANVAS_PADDING - 5, y);
-      ctx.lineTo(CANVAS_PADDING, y);
-      ctx.stroke();
-      
-      // Draw foot marker
+      // Add scale indicator
       ctx.textAlign = 'right';
-      ctx.fillText(`${ft}'`, CANVAS_PADDING - 10, y);
+      ctx.fillText(
+        `1 square = 1 meter`,
+        canvas.width - 10,
+        10
+      );
+    } else {
+      // Draw horizontal ruler (length) in feet
+      for (let ft = 0; ft <= Math.ceil(truckLengthFeet); ft += GRID_MAJOR_INTERVAL) {
+        const x = CANVAS_PADDING + (ft * FEET_TO_METERS * scaleX);
+        
+        // Draw tick
+        ctx.beginPath();
+        ctx.moveTo(x, CANVAS_PADDING - 5);
+        ctx.lineTo(x, CANVAS_PADDING);
+        ctx.stroke();
+        
+        // Draw foot marker
+        ctx.fillText(`${ft}'`, x, CANVAS_PADDING - 15);
+      }
+      
+      // Draw vertical ruler (width) in feet
+      for (let ft = 0; ft <= Math.ceil(truckWidthFeet); ft += GRID_MAJOR_INTERVAL) {
+        const y = CANVAS_PADDING + (ft * FEET_TO_METERS * scaleY);
+        
+        // Draw tick
+        ctx.beginPath();
+        ctx.moveTo(CANVAS_PADDING - 5, y);
+        ctx.lineTo(CANVAS_PADDING, y);
+        ctx.stroke();
+        
+        // Draw foot marker
+        ctx.textAlign = 'right';
+        ctx.fillText(`${ft}'`, CANVAS_PADDING - 10, y);
+      }
+      
+      // Add container label in feet
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(
+        `53' × 9' Container (${truckLengthFeet.toFixed(1)}' × ${truckWidthFeet.toFixed(1)}')`,
+        CANVAS_PADDING,
+        10
+      );
+      
+      // Add scale indicator
+      ctx.textAlign = 'right';
+      ctx.fillText(
+        `1 square = 1 foot`,
+        canvas.width - 10,
+        10
+      );
     }
-    
-    // Add container label
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 16px Arial';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText(
-      `53' × 9' Container (${truckLengthFeet.toFixed(1)}' × ${truckWidthFeet.toFixed(1)}')`,
-      CANVAS_PADDING,
-      10
-    );
-    
-    // Add scale indicator
-    ctx.textAlign = 'right';
-    ctx.fillText(
-      `1 square = 1 foot`,
-      canvas.width - 10,
-      10
-    );
     
     // Draw orientation indicators
     ctx.font = 'bold 14px Arial';
@@ -273,10 +362,10 @@ const ContainerCanvas: React.FC<ContainerCanvasProps> = ({
     ctx.textAlign = 'left';
     ctx.fillText('BACK', CANVAS_PADDING + truckLengthMeters * scaleX + 25, CANVAS_PADDING + truckWidthMeters * scaleY / 2);
     
-    // Right at top, Left at bottom
+    // Left at top, Right at bottom - SWAPPED as requested
     ctx.textAlign = 'center';
-    ctx.fillText('RIGHT', CANVAS_PADDING + truckLengthMeters * scaleX / 2, CANVAS_PADDING - 25);
-    ctx.fillText('LEFT', CANVAS_PADDING + truckLengthMeters * scaleX / 2, CANVAS_PADDING + truckWidthMeters * scaleY + 25);
+    ctx.fillText('LEFT', CANVAS_PADDING + truckLengthMeters * scaleX / 2, CANVAS_PADDING - 25);
+    ctx.fillText('RIGHT', CANVAS_PADDING + truckLengthMeters * scaleX / 2, CANVAS_PADDING + truckWidthMeters * scaleY + 25);
     
     // Draw skids
     sortedSkids.forEach((skid, index) => {
@@ -395,14 +484,23 @@ const ContainerCanvas: React.FC<ContainerCanvasProps> = ({
             maxTextWidth
           );
           
-          // Draw dimensions in small text below label
+          // Draw dimensions based on unit system
           ctx.font = `${LABEL_FONT_SIZE - 2}px Arial`;
-          ctx.fillText(
-            `${(skidWidth * METERS_TO_FEET).toFixed(1)}' × ${(skidLength * METERS_TO_FEET).toFixed(1)}'`,
-            labelX,
-            labelY + 15,
-            maxTextWidth
-          );
+          if (useMetric) {
+            ctx.fillText(
+              `${skidWidth.toFixed(1)}m × ${skidLength.toFixed(1)}m`,
+              labelX,
+              labelY + 15,
+              maxTextWidth
+            );
+          } else {
+            ctx.fillText(
+              `${(skidWidth * METERS_TO_FEET).toFixed(1)}' × ${(skidLength * METERS_TO_FEET).toFixed(1)}'`,
+              labelX,
+              labelY + 15,
+              maxTextWidth
+            );
+          }
         }
       }
       
@@ -477,7 +575,9 @@ const ContainerCanvas: React.FC<ContainerCanvasProps> = ({
     showGrid, 
     showLabels, 
     highlightedSkidId, 
-    hoveredSkid
+    hoveredSkid,
+    useMetric,
+    GRID_MAJOR_INTERVAL
   ]);
 
   return (

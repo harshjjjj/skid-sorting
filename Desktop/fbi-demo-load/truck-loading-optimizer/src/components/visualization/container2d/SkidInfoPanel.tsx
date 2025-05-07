@@ -25,12 +25,17 @@ import { Skid } from '../../../models/types';
 
 // Conversion constants
 const METERS_TO_FEET = 3.28084;
+const KILOS_TO_POUNDS = 2.20462;
 
 interface SkidInfoPanelProps {
   skid: Skid | null;
+  useMetric?: boolean;
 }
 
-const SkidInfoPanel: React.FC<SkidInfoPanelProps> = ({ skid }) => {
+const SkidInfoPanel: React.FC<SkidInfoPanelProps> = ({ 
+  skid,
+  useMetric = false 
+}) => {
   if (!skid) {
     return (
       // @ts-ignore - Complex union type in MUI sx prop
@@ -53,13 +58,13 @@ const SkidInfoPanel: React.FC<SkidInfoPanelProps> = ({ skid }) => {
     );
   }
   
-  // Convert dimensions to feet for display
+  // Convert dimensions to feet for display if needed
   const widthFeet = (skid.width * METERS_TO_FEET).toFixed(2);
   const lengthFeet = (skid.length * METERS_TO_FEET).toFixed(2);
   const heightFeet = (skid.height * METERS_TO_FEET).toFixed(2);
-  const weightLbs = (skid.weight * 2.20462).toFixed(1);
+  const weightLbs = (skid.weight * KILOS_TO_POUNDS).toFixed(1);
   
-  // Format position if available
+  // Format position based on units
   const positionText = skid.position 
     ? `(${skid.position.x.toFixed(2)}, ${skid.position.y.toFixed(2)}, ${skid.position.z.toFixed(2)})` 
     : 'Not loaded';
@@ -94,7 +99,10 @@ const SkidInfoPanel: React.FC<SkidInfoPanelProps> = ({ skid }) => {
           <Tooltip title="Dimensions">
             <Chip
               icon={<DimensionIcon />}
-              label={`${widthFeet}' × ${lengthFeet}' × ${heightFeet}'`}
+              label={useMetric ? 
+                `${skid.width.toFixed(2)}m × ${skid.length.toFixed(2)}m × ${skid.height.toFixed(2)}m` : 
+                `${widthFeet}' × ${lengthFeet}' × ${heightFeet}'`
+              }
               variant="outlined"
             />
           </Tooltip>
@@ -103,7 +111,10 @@ const SkidInfoPanel: React.FC<SkidInfoPanelProps> = ({ skid }) => {
           <Tooltip title="Weight">
             <Chip
               icon={<WeightIcon />}
-              label={`${skid.weight.toFixed(1)} kg (${weightLbs} lbs)`}
+              label={useMetric ? 
+                `${skid.weight.toFixed(1)} kg` : 
+                `${weightLbs} lbs (${skid.weight.toFixed(1)} kg)`
+              }
               variant="outlined"
             />
           </Tooltip>
@@ -144,10 +155,12 @@ const SkidInfoPanel: React.FC<SkidInfoPanelProps> = ({ skid }) => {
             <TableCell component="th" scope="row">Position (meters)</TableCell>
             <TableCell align="right">{positionText}</TableCell>
           </TableRow>
-          <TableRow>
-            <TableCell component="th" scope="row">Position (feet)</TableCell>
-            <TableCell align="right">{positionFeet}</TableCell>
-          </TableRow>
+          {!useMetric && (
+            <TableRow>
+              <TableCell component="th" scope="row">Position (feet)</TableCell>
+              <TableCell align="right">{positionFeet}</TableCell>
+            </TableRow>
+          )}
           {skid.position && (
             <TableRow>
               <TableCell component="th" scope="row">Rotation</TableCell>

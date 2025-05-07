@@ -20,6 +20,7 @@ import {
   Description as DescriptionIcon,
   Save as SaveIcon,
   Folder as FolderIcon,
+  ViewQuilt as ViewQuiltIcon,
 } from '@mui/icons-material';
 import { useAppContext } from '../../context/AppContext';
 
@@ -29,6 +30,46 @@ interface SidebarProps {
 }
 
 const drawerWidth = 240;
+
+// Define style constants with proper typing
+const drawerContentStyle: React.CSSProperties = {
+  paddingTop: 16,
+  paddingBottom: 16,
+  paddingLeft: 8,
+  paddingRight: 8,
+  display: 'flex',
+  flexDirection: 'column' as React.CSSProperties['flexDirection'],
+  height: '100%'
+};
+
+const logoBoxStyle: React.CSSProperties = {
+  paddingLeft: 16,
+  paddingRight: 16,
+  marginBottom: 16
+};
+
+const versionBoxStyle: React.CSSProperties = {
+  marginTop: 'auto',
+  padding: 16
+};
+
+const mobileDrawerStyle = {
+  display: { xs: 'block', md: 'none' } as const,
+  '& .MuiDrawer-paper': { 
+    boxSizing: 'border-box', 
+    width: drawerWidth 
+  },
+};
+
+const desktopDrawerStyle = {
+  width: drawerWidth,
+  flexShrink: 0,
+  '& .MuiDrawer-paper': {
+    width: drawerWidth,
+    boxSizing: 'border-box',
+    borderRight: '1px solid rgba(0, 0, 0, 0.12)',
+  },
+};
 
 const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   const { activeTab, setActiveTab } = useAppContext();
@@ -45,12 +86,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   };
 
   const drawerContent = (
-    <Box sx={{ py: 2, px: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box sx={{ px: 2, mb: 2 }}>
+    <div style={drawerContentStyle}>
+      <div style={logoBoxStyle}>
         <Typography variant="h6" color="primary" fontWeight="bold">
           Truck Loader
         </Typography>
-      </Box>
+      </div>
       
       <Divider />
       
@@ -75,6 +116,17 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
             <AddIcon />
           </ListItemIcon>
           <ListItemText primary="Input Data" />
+        </ListItem>
+        
+        <ListItem 
+          button 
+          selected={activeTab === 'placedSkid'} 
+          onClick={() => handleNavigation('placedSkid')}
+        >
+          <ListItemIcon>
+            <ViewQuiltIcon />
+          </ListItemIcon>
+          <ListItemText primary="Placed Skid" />
         </ListItem>
         
         <ListItem 
@@ -148,12 +200,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
         </ListItem>
       </List>
       
-      <Box sx={{ mt: 'auto', p: 2 }}>
+      <div style={versionBoxStyle}>
         <Typography variant="caption" color="text.secondary">
           Version 1.0.0
         </Typography>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 
   return (
@@ -167,28 +219,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
           ModalProps={{
             keepMounted: true, // Better performance on mobile
           }}
-          sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth 
-            },
-          }}
+          sx={mobileDrawerStyle}
         >
           {drawerContent}
         </Drawer>
       ) : (
         // Desktop view - persistent drawer
         <Drawer
-          sx={{
-            width: drawerWidth,
-            flexShrink: 0,
-            '& .MuiDrawer-paper': {
-              width: drawerWidth,
-              boxSizing: 'border-box',
-              borderRight: '1px solid rgba(0, 0, 0, 0.12)',
-            },
-          }}
+          sx={desktopDrawerStyle}
           variant="persistent"
           anchor="left"
           open={open}
